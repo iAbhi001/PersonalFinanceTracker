@@ -1,18 +1,22 @@
-import express from "express";
+// backend/src/server.js
 import dotenv from "dotenv";
-import loaders from "./loaders/index.js";
-
 dotenv.config();
+import app from "./app.js";
+import { db } from "./config/db.js";
 
-async function startServer() {
-  const app = express();
+const PORT = process.env.PORT || 4000;
 
-  await loaders(app);
+(async () => {
+  try {
+    // Try to get a connection from the pool
+    const connection = await db.getConnection();
+    console.log("✅ Connected to RDS successfully");
+    connection.release(); // release back to the pool
+  } catch (err) {
+    console.error("❌ Failed to connect to RDS:", err.message);
+  }
 
-  const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`API listening on http://0.0.0.0:${PORT}`);
   });
-}
-
-startServer();
+})();
