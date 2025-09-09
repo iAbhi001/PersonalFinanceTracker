@@ -1,16 +1,20 @@
-// backend/src/models/Account.js
+// backend/src/models/Category.js
 import { db } from "../config/db.js";
 
-export async function createAccount({ user_id, name, type, due_date = null, balance = 0 }) {
-  const [r] = await db.execute(
-    `INSERT INTO accounts (user_id, name, type, due_date, balance)
-     VALUES (:user_id, :name, :type, :due_date, :balance)`,
-    { user_id, name, type, due_date, balance }
+// Create a new category
+export async function createCategory({ user_id, name }) {
+  const [result] = await db.query(
+    "INSERT INTO categories (user_id, name) VALUES (?, ?)",
+    [user_id, name]
   );
-  return r.insertId;
+  return { id: result.insertId, name };
 }
 
-export async function listAccounts(user_id) {
-  const [rows] = await db.execute(`SELECT * FROM accounts WHERE user_id = :user_id`, { user_id });
+// List categories for a user
+export async function listCategories(user_id) {
+  const [rows] = await db.query(
+    "SELECT id, name FROM categories WHERE user_id = ?",
+    [user_id]
+  );
   return rows;
 }

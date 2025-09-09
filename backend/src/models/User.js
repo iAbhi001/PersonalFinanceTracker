@@ -10,7 +10,9 @@ export async function createUser({ name, email, passwordHash, googleId = null })
 }
 
 export async function findUserByEmail(email) {
-  const [rows] = await db.execute(`SELECT * FROM users WHERE email = :email`, { email: email?.toLowerCase() });
+  const [rows] = await db.execute(`SELECT * FROM users WHERE email = :email`, {
+    email: email?.toLowerCase(),
+  });
   return rows[0];
 }
 
@@ -28,6 +30,9 @@ export async function linkGoogleAccount(userId, googleId) {
   await db.execute(`UPDATE users SET google_id = :google_id WHERE id = :id`, { google_id: googleId, id: userId });
 }
 
+// ------------------------
+// Password reset functions
+// ------------------------
 export async function setPasswordResetToken(userId, token, expiresAt) {
   await db.execute(
     `UPDATE users SET reset_token = :token, reset_expires = :expires WHERE id = :id`,
@@ -41,9 +46,14 @@ export async function consumePasswordResetToken(token) {
     { token }
   );
   const u = rows[0];
-  if (!u) return null;
-  if (new Date(u.reset_expires) < new Date()) return null;
-  await db.execute(`UPDATE users SET reset_token = NULL, reset_expires = NULL WHERE id = :id`, { id: u.id });
+  if (!u) return null; // token not found
+  if (new Date(u.reset_expires) < new Date()) return null; // token expired
+
+  await db.execute(
+    `UPDATE users SET reset_token = NULL, reset_expires = NULL WHERE id = :id`,
+    { id: u.id }
+  );
+
   return u.id;
 }
 
